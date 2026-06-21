@@ -1617,8 +1617,17 @@ class RecipeWindow(tk.Toplevel):
             w.destroy()
         self._card_imgs = []
         if r is None:
-            tk.Label(self.card, text="No match.", bg=HUD_BG, fg=DIM,
-                     font=("Segoe UI", 13)).pack(anchor="w", padx=8, pady=8)
+            if not self.recipes:
+                tk.Label(self.card, text="No recipe data yet.", bg=HUD_BG, fg=FG,
+                         font=("Segoe UI", 18, "bold")).pack(anchor="w", padx=8, pady=(8, 4))
+                msg = ("Run  srextract.exe  in this folder to generate recipes + icons\n"
+                       "from your own copy of the game (grab it from the GitHub release).\n\n"
+                       "The timer works fine without it.")
+                tk.Label(self.card, text=msg, bg=HUD_BG, fg=DIM, justify="left",
+                         font=("Segoe UI", 12)).pack(anchor="w", padx=8)
+            else:
+                tk.Label(self.card, text="No match.", bg=HUD_BG, fg=DIM,
+                         font=("Segoe UI", 13)).pack(anchor="w", padx=8, pady=8)
             return
 
         # header: big product icon + name + machine/time + yield
