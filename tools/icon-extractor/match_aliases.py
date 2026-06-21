@@ -25,6 +25,10 @@ ALIASES = {
     "Magic Oil":                "T_MagicOilOre_Icon",
     "Syrigne":                  "T_Syringe_Icon",
     "FE_Battery":               "T_Battery_Icon",
+    "Sulfuric Acid":            "T_SulphuricAcid_Icon",
+    "Sulfur Ore":               "T_SulphurOre_Icon",
+    "Nanofiber":                "T_Nanofibre_Icon",
+    "Helium-3":                 "T_HeliumOre_Icon",
 }
 
 icons = json.load(open(ICONS_JSON, encoding="utf-8"))

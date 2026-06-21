@@ -21,3 +21,10 @@ config.json
 
 # Dumper debug output
 diag.txt
+
+# icon-extractor build outputs (CUE4Parse is cloned by build.bat)
+tools/icon-extractor/CUE4Parse/
+tools/icon-extractor/bin/
+tools/icon-extractor/obj/
+tools/icon-extractor/publish/
+*.usmap

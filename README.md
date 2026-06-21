@@ -89,9 +89,17 @@ Shows each item's **real per-craft inputs and quantities** with the game's icons
 - **Recipe data** (`recipes.json`) is included — 177 recipes, real inputs extracted
   from the live game.
 - **Item icons are not included** in this repo (they're Creepy Jar's copyrighted
-  art). Without them the panel shows clean text tiles. To get the real icons,
-  generate them from your own copy of the game with
-  [`tools/icon-extractor`](tools/README.md), which fills `icons/` locally.
+  art). Without them the panel shows clean text tiles.
+
+### Getting the real icons (one double-click)
+
+Download **`srextract.exe`** from [Releases](../../releases), drop it in this folder,
+and run it. It auto-detects your Steam copy of the game, downloads the UE mappings,
+and fills `icons/` with the real icons (~179 items). See
+[`tools/icon-extractor`](tools/icon-extractor/README.md) for details/options.
+
+> You need to own the game; extracting its art for your own use is fine — just
+> don't redistribute the extracted PNGs.
 
 `recipes.json` is bundled into the exe **and** read from next to the exe if present
 — so you can drop in updated/extracted data without rebuilding.

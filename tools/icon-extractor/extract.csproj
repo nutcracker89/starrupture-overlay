@@ -8,8 +8,10 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <AssemblyName>srextract</AssemblyName>
   </PropertyGroup>
+  <!-- CUE4Parse MUST be built from master source (the NuGet release can't read
+       UE5.6 IoStore container headers). build.bat clones it next to this file. -->
   <ItemGroup>
-    <ProjectReference Include="F:\cue4parse_src\CUE4Parse\CUE4Parse.csproj" />
-    <ProjectReference Include="F:\cue4parse_src\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
+    <ProjectReference Include="CUE4Parse\CUE4Parse\CUE4Parse.csproj" />
+    <ProjectReference Include="CUE4Parse\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
   </ItemGroup>
 </Project>
