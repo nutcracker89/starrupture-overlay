@@ -1,0 +1,27 @@
+StarRupture Recipe Dump — run steps
+===================================
+Files here:  RecipeDumper.dll  +  inject.exe   (keep them together)
+
+1. Have StarRupture running and be IN-GAME (loaded into a save/world) — your
+   current session is fine. (Recipes must be loaded, so not at the main menu.)
+
+2. Run  inject.exe  (double-click it here in F:\sr_dump, or run it from a
+   terminal opened in this folder).
+   -> A popup "RecipeDumper loaded" appears = injected OK.
+      (If nothing happens: open cmd in this folder and run inject.exe to see the
+       error — usually "game not running" or you weren't in-game.)
+
+3. Alt-tab back into the game and press  F10 .
+   -> A popup "Wrote N recipes to F:\starrupture_timer\recipes_dump.json" = done.
+
+4. Tell me it's done. I read recipes_dump.json and merge the real inputs into
+   the overlay's 109 recipes, then rebuild.
+
+Notes:
+- Windows Defender may flag inject.exe (it's a LoadLibrary injector). If it's
+  quarantined, allow it / restore it (it's compiled from inject.cpp here, which
+  you can read).
+- Safe: all memory reads are SEH-guarded — a wrong offset writes an error file,
+  it won't crash the game.
+- You can delete the old dwmapi.dll / UE4SS.dll / UE4SS.log from the game's
+  Binaries\Win64 after closing the game (leftover from the UE4SS attempt).

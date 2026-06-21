@@ -1,0 +1,3 @@
+# Item-icon PNGs are not committed (they are the game's copyrighted art).
+# Generate them locally from your own copy of the game with tools/icon-extractor,
+# then they'll appear here and get bundled by build.bat.

@@ -1,0 +1,23 @@
+# Build artifacts
+dist/
+build/
+*.spec
+__pycache__/
+*.pyc
+
+# Game art (Creepy Jar's copyrighted textures) — regenerate locally with tools/icon-extractor.
+# The folder itself is kept (icons/.gitkeep) so build.bat works; PNGs are not redistributed.
+icons/*.png
+
+# Intermediate / derived data dumps
+recipes_dump.json
+recipes_final.json
+recipes_final2.json
+recipes_catalog_backup.json
+icons_src.json
+
+# Local runtime config (also stored in %LOCALAPPDATA%)
+config.json
+
+# Dumper debug output
+diag.txt

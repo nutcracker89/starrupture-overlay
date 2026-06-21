@@ -1,0 +1,7 @@
+# Runtime: the timer works with the Python standard library alone.
+# The recipe panel needs Pillow for icon/tile rendering (optional — without it,
+# the timer still runs and recipes show as text).
+Pillow>=10.0
+
+# Build only (to produce dist/StarRuptureTimer.exe via build.bat):
+pyinstaller>=6.0
