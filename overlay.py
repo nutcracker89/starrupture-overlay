@@ -1633,7 +1633,7 @@ class RecipeWindow(tk.Toplevel):
         tk.Label(info, text=r["output"], bg=HUD_BG, fg=FG,
                  font=("Segoe UI", 28, "bold")).pack(anchor="w")
         time_s = r.get("time_s")
-        sub = r.get("machine", "?") + (f"   ·   {_qstr(time_s)}s" if time_s is not None else "")
+        sub = (r.get("machine") or "?") + (f"   ·   {_qstr(time_s)}s" if time_s is not None else "")
         tk.Label(info, text=sub, bg=HUD_BG, fg=TEAL,
                  font=("Segoe UI", 16)).pack(anchor="w", pady=(4, 0))
         tk.Label(info, text=f"yields ×{_qstr(r.get('output_qty'))}", bg=HUD_BG, fg=DIM,

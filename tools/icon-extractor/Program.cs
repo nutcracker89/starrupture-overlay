@@ -83,13 +83,9 @@ class Program
     static void Run(string[] args)
     {
         string exeDir = AppContext.BaseDirectory;
-        string overlayDir = GetArg(args, "--overlay") ?? FindOverlayDir(exeDir);
-        if (overlayDir == null)
-        {
-            Console.WriteLine("Could not find recipes.json. Put this exe in your StarRupture overlay folder");
-            Console.WriteLine("(next to recipes.json and icons.json), then run it again.");
-            return;
-        }
+        // overlay folder = where recipes.json lives (or will be generated). Default to the
+        // exe's own folder so dropping it into a fresh clone just works.
+        string overlayDir = GetArg(args, "--overlay") ?? FindOverlayDir(exeDir) ?? exeDir;
         string usmap = GetArg(args, "--usmap") ?? FindUsmap(exeDir, overlayDir) ?? DownloadUsmap(exeDir);
         if (usmap == null)
         {
@@ -118,7 +114,14 @@ class Program
         provider.MappingsContainer = new FileUsmapTypeMappingsProvider(usmap);
         provider.Mount();
         provider.PostMount();
-        Console.WriteLine($"Mounted {provider.Files.Count} files. Exporting item icons...");
+
+        Console.WriteLine($"Mounted {provider.Files.Count} files.");
+
+        // generate recipes.json from the game if the overlay folder doesn't have one
+        if (!File.Exists(Path.Combine(overlayDir, "recipes.json")))
+            GenerateRecipes(provider, overlayDir);
+
+        Console.WriteLine("Exporting item icons...");
 
         // decode every /UI/ItemIcons/ texture in memory
         var byNorm = new Dictionary<string, (int pri, byte[] png, string fn)>();
@@ -235,6 +238,131 @@ class Program
             if (f != null) return f;
         }
         return null;
+    }
+
+    static void GenerateRecipes(DefaultFileProvider provider, string overlayDir)
+    {
+        Console.WriteLine("No recipes.json — generating it from the game's recipe assets...");
+        string PkgKey(string objPath)
+        {
+            if (string.IsNullOrEmpty(objPath)) return "";
+            int i = objPath.LastIndexOf('.');
+            return i > 0 ? objPath.Substring(0, i) : objPath;
+        }
+        string Loc(JToken ft) => ft == null ? null :
+            (string)(ft["LocalizedString"] ?? ft["SourceString"] ?? ft["CultureInvariantString"]);
+
+        var itemName = new Dictionary<string, string>();      // /Game/.../I_X -> display name
+        var raw = new List<(string outPath, string outName, int outQty,
+                            List<(string p, int q)> ins, string desc, int level)>();
+
+        var recipePkgs = provider.Files.Keys.Where(k =>
+            k.EndsWith(".uasset", StringComparison.OrdinalIgnoreCase) &&
+            k.IndexOf("/Crafting/", StringComparison.OrdinalIgnoreCase) >= 0 &&
+            Path.GetFileName(k).StartsWith("CR_", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        foreach (var path in recipePkgs)
+        {
+            try
+            {
+                var pkg = provider.LoadPackage(path);
+                var arr = JArray.Parse(JsonConvert.SerializeObject(pkg.GetExports()));
+                var e = arr.FirstOrDefault(x => x["Properties"]?["OutputItem"] != null);
+                var p = e?["Properties"];
+                if (p?["OutputItem"] is not JObject outItem) continue;
+                var outPath = PkgKey((string)outItem["Item"]?["ObjectPath"]);
+                var outName = Loc(p["DisplayText"]);
+                int outQty = (int?)outItem["Count"] ?? 1;
+                if (!string.IsNullOrEmpty(outName) && outPath.Length > 0 && !itemName.ContainsKey(outPath))
+                    itemName[outPath] = outName;
+                var ins = new List<(string, int)>();
+                if (p["NeededResources"] is JArray nr)
+                    foreach (var r in nr)
+                    {
+                        var ip = PkgKey((string)r["Item"]?["ObjectPath"]);
+                        if (ip.Length > 0) ins.Add((ip, (int?)r["Count"] ?? 0));
+                    }
+                raw.Add((outPath, outName, outQty, ins, Loc(p["DisplayDescription"]), (int?)p["Level"] ?? 0));
+            }
+            catch { }
+        }
+
+        string ResolveName(string key)
+        {
+            if (itemName.TryGetValue(key, out var n)) return n;
+            try
+            {
+                var pkg = provider.LoadPackage(key.Replace("/Game/", "StarRupture/Content/"));
+                var arr = JArray.Parse(JsonConvert.SerializeObject(pkg.GetExports()));
+                foreach (var x in arr)
+                {
+                    var nm = Loc(x["Properties"]?["ItemName"]);
+                    if (!string.IsNullOrEmpty(nm)) { itemName[key] = nm; return nm; }
+                }
+            }
+            catch { }
+            var an = key.Substring(key.LastIndexOf('/') + 1);
+            an = Regex.Replace(an, "^I_", "");
+            an = Regex.Replace(an, "(?<=[a-z0-9])(?=[A-Z])", " ");
+            itemName[key] = an;
+            return an;
+        }
+
+        bool IsJunk(string n)
+        {
+            if (string.IsNullOrWhiteSpace(n)) return true;
+            var l = n.ToLowerInvariant();
+            return l.Contains("missing string table") || l.Contains("placeholder") ||
+                   l.Contains("scenario_") || l.Contains("victory_") || l.Contains("crafting test") ||
+                   l.Contains("empty item") || l == "none";
+        }
+
+        var built = new List<JObject>();
+        foreach (var r in raw)
+        {
+            var outNm = string.IsNullOrEmpty(r.outName) ? ResolveName(r.outPath) : r.outName;
+            if (IsJunk(outNm)) continue;
+            var insArr = new JArray();
+            foreach (var (ip, iq) in r.ins)
+            {
+                var inNm = ResolveName(ip);
+                if (IsJunk(inNm)) continue;
+                insArr.Add(new JObject { ["item"] = inNm, ["qty"] = iq });
+            }
+            built.Add(new JObject
+            {
+                ["output"] = outNm,
+                ["output_qty"] = r.outQty,
+                ["machine"] = null,
+                ["time_s"] = null,
+                ["inputs"] = insArr,
+                ["inputs_unknown"] = false,
+                ["unlock"] = r.level > 0 ? "Level " + r.level : null,
+                ["description"] = r.desc,
+            });
+        }
+
+        // one recipe per output: prefer non-self-referential with inputs, max yield
+        string N(string s) => Regex.Replace((s ?? "").ToLowerInvariant(), "[^a-z0-9]", "");
+        var picked = new List<JObject>();
+        foreach (var g in built.GroupBy(b => N((string)b["output"])).Where(g => g.Key.Length > 0))
+        {
+            var list = g.ToList();
+            var nonself = list.Where(b => ((JArray)b["inputs"]).All(i => N((string)i["item"]) != g.Key)).ToList();
+            var pool = (nonself.Count > 0 ? nonself : list).Where(b => ((JArray)b["inputs"]).Count > 0).ToList();
+            if (pool.Count == 0) pool = list;
+            picked.Add(pool.OrderByDescending(b => (int)b["output_qty"]).First());
+        }
+        picked = picked.OrderBy(b => ((string)b["output"]).ToLowerInvariant()).ToList();
+
+        var root = new JObject
+        {
+            ["_meta"] = new JObject { ["source"] = "Generated locally from your StarRupture game files (CrItemRecipeData). Inputs/outputs are real; machine is not populated by the local generator." },
+            ["recipes"] = new JArray(picked),
+        };
+        File.WriteAllText(Path.Combine(overlayDir, "recipes.json"),
+            root.ToString(Formatting.Indented), new UTF8Encoding(false));
+        Console.WriteLine($"Generated recipes.json with {picked.Count} recipes.");
     }
 
     static string DownloadUsmap(string exeDir)

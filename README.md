@@ -86,31 +86,36 @@ warnings **early** to cover the spread.
 A centered, stepped-edge panel: filter rail · search + recipe card · favorites.
 Shows each item's **real per-craft inputs and quantities** with the game's icons.
 
-- **Recipe data** (`recipes.json`) is included — 177 recipes, real inputs extracted
-  from the live game.
-- **Item icons are not included** in this repo (they're Creepy Jar's copyrighted
-  art). Without them the panel shows clean text tiles.
+> **This repo ships no game data.** Recipe info and item icons aren't included —
+> they're generated locally from *your own* copy of the game. So out of the box the
+> recipe panel is empty until you run the one-click generator below. (The timer
+> works fully without it.)
 
-### Getting the real icons (one double-click)
+### Populate it — one double-click
 
-Download **`srextract.exe`** from [Releases](../../releases), drop it in this folder,
-and run it. It auto-detects your Steam copy of the game, downloads the UE mappings,
-and fills `icons/` with the real icons (~179 items). See
-[`tools/icon-extractor`](tools/icon-extractor/README.md) for details/options.
+1. Download **`srextract.exe`** from [Releases](../../releases).
+2. Drop it in this folder.
+3. **Run it.**
 
-> You need to own the game; extracting its art for your own use is fine — just
-> don't redistribute the extracted PNGs.
+It auto-detects your Steam install of StarRupture, downloads the UE mappings, then
+generates **`recipes.json`** (real inputs/outputs, ~185 recipes) and the item icons
+in **`icons/`** — all from your own game files, nothing redistributed. Then launch
+the overlay and the recipe panel is fully populated. See
+[`tools/icon-extractor`](tools/icon-extractor/README.md) for options.
 
-`recipes.json` is bundled into the exe **and** read from next to the exe if present
-— so you can drop in updated/extracted data without rebuilding.
+> You need to own the game. Extracting its data/art for your own use is the clean
+> line — don't redistribute the generated `recipes.json`/PNGs. *(Machine/station per
+> recipe isn't populated by the local generator yet.)*
 
 ---
 
 ## Refreshing the data (advanced)
 
-After a game patch, regenerate recipes/icons from your own game copy — see
-[`tools/`](tools/README.md) (a C++ injector for recipes, a CUE4Parse extractor for
-icons). Not needed for normal use.
+`srextract.exe` reads everything from the packaged game files, so after a game patch
+just run it again to regenerate `recipes.json` + icons. It only generates
+`recipes.json` if one isn't already present, so delete yours first to force a refresh.
+See [`tools/`](tools/README.md) (there's also a live-memory recipe dumper, but it's
+no longer needed — the pak reader covers it).
 
 ---
 

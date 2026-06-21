@@ -1,16 +1,26 @@
 # Data tools (advanced / optional)
 
-These regenerate the overlay's data from **your own copy of the game**. You do
-**not** need them to use the overlay — they only refresh `recipes.json` and the
-item icons (e.g. after a game patch). Game art is intentionally not shipped in
-this repo; this is how you produce it locally.
+These generate the overlay's data from **your own copy of the game** — recipes and
+item icons. **No game data is shipped in this repo**; this is how you produce it
+locally. For normal use just grab `srextract.exe` from Releases (see
+[`icon-extractor`](icon-extractor/README.md)) — it does recipes *and* icons in one
+double-click. The rest here is the source / a legacy alternative.
 
-> ⚠️ These are reverse-engineering / memory-injection tools. Use them only on a
-> game you own, for personal use. Distributing extracted game assets may infringe
-> Creepy Jar's copyright, and injecting into the game may breach its EULA. You are
+> ⚠️ These read/parse game files (and the legacy dumper injects into the game).
+> Use them only on a game you own, for personal use. Don't redistribute the
+> generated data/art, and note injection may breach the game's EULA. You're
 > responsible for how you use them.
 
-## recipe-dumper — real per-craft recipe inputs
+## icon-extractor (`srextract`) — recipes + icons from the .pak  ⭐ use this
+
+The main tool. A [CUE4Parse](https://github.com/FabianFG/CUE4Parse) program that
+mounts the game's UE5.6 IoStore, generates `recipes.json` from the `CR_*` recipe
+assets, and exports item icons — see [`icon-extractor/README.md`](icon-extractor/README.md).
+
+## recipe-dumper — legacy live-memory recipe dumper
+
+> Superseded by `srextract` (which reads recipes straight from the paks, no
+> injection). Kept for reference.
 
 A C++ DLL that reads `CrItemRecipeData` from the live game and writes the real
 recipe inputs to JSON.
